@@ -21,7 +21,7 @@ class WeatherForecast:
             min_per_day: tensor of size (num_days,)
             max_per_day: tensor of size (num_days,)
         """
-        raise NotImplementedError
+        return torch.min(self.data, dim=1)[0], torch.max(self.data, dim=1)[0]
 
     def find_the_largest_drop(self) -> torch.Tensor:
         """
@@ -31,7 +31,9 @@ class WeatherForecast:
         Returns:
             tensor of a single value, the difference in temperature
         """
-        raise NotImplementedError
+        daily_avg = torch.mean(self.data, dim=1)
+        day_over_day = torch.diff(daily_avg)
+        return torch.min(day_over_day)
 
     def find_the_most_extreme_day(self) -> torch.Tensor:
         """
@@ -40,7 +42,11 @@ class WeatherForecast:
         Returns:
             tensor with size (num_days,)
         """
-        raise NotImplementedError
+        daily_avg = torch.mean(self.data, dim=1, keepdim=True)
+        abs_diff = torch.abs(self.data - daily_avg)
+        max_diff_idx = torch.argmax(abs_diff, dim=1)
+        # Get the actual measurement values, not the differences
+        return torch.gather(self.data, 1, max_diff_idx.unsqueeze(1)).squeeze(1)
 
     def max_last_k_days(self, k: int) -> torch.Tensor:
         """
@@ -49,7 +55,8 @@ class WeatherForecast:
         Returns:
             tensor of size (k,)
         """
-        raise NotImplementedError
+        last_k_days = self.data[-k:]
+        return torch.max(last_k_days, dim=1)[0]
 
     def predict_temperature(self, k: int) -> torch.Tensor:
         """
@@ -62,7 +69,9 @@ class WeatherForecast:
         Returns:
             tensor of a single value, the predicted temperature
         """
-        raise NotImplementedError
+        last_k_days = self.data[-k:]
+        daily_avg = torch.mean(last_k_days, dim=1)
+        return torch.mean(daily_avg)
 
     def what_day_is_this_from(self, t: torch.FloatTensor) -> torch.LongTensor:
         """
@@ -87,4 +96,6 @@ class WeatherForecast:
         Returns:
             tensor of a single value, the index of the closest data element
         """
-        raise NotImplementedError
+        # Calculate sum of absolute differences for each day
+        differences = torch.sum(torch.abs(self.data - t), dim=1)
+        return torch.argmin(differences)
