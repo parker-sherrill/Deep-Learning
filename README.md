@@ -1,6 +1,6 @@
 # Deep Learning Coursework
 
-This repository contains my coursework for the Deep Learning course.
+This repository contains my coursework for the Deep Learning course!
 
 ## Structure
 
